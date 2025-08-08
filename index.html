@@ -1,161 +1,384 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>Графическая новелла</title>
-    <style>
-        body { margin: 0; font-family: sans-serif; background: #000; color: white; text-align: center; }
-        #game-container { width: 600px; height: 800px; margin: 0 auto; position: relative; background: #111; }
-        #scene-image { width: 100%; height: 70%; object-fit: cover; }
-        #question { margin-top: 10px; font-size: 20px; }
-        .answer-btn { display: block; margin: 10px auto; padding: 10px 20px; background: #333; color: white; border: none; cursor: pointer; width: 80%; }
-        .answer-btn:hover { background: #555; }
-        #score { position: absolute; top: 10px; left: 10px; background: #222; padding: 5px 10px; border-radius: 5px; }
-        #memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 10px; }
-        .memory-card { width: 100%; aspect-ratio: 1/1; background-size: cover; cursor: pointer; border: 2px solid #444; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Квиз</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #0D3A36;
+      height: 100%;
+      width: 100%;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .header {
+      height: 40px;
+      width: 100%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 10;
+      flex-shrink: 0;
+    }
+    .header img {
+      height: 30px;
+    }
+    .quiz-container {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      position: relative;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .slide-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      transition: opacity 0.5s ease;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .fade-in {
+      opacity: 1;
+    }
+    .fade-out {
+      opacity: 0;
+    }
+
+    .buttons {
+      position: absolute;
+      bottom: 45px; /* Увеличен отступ снизу */
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 90%;
+      z-index: 5;
+      gap: 12px;
+    }
+    .button {
+      background-color: #00b398;
+      color: white;
+      border: none;
+      padding: 16px 24px;
+      font-size: 18px;
+      border-radius: 16px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 320px;
+      transition: all 0.3s ease;
+      box-sizing: border-box;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .button:hover {
+      background-color: #008f79;
+    }
+
+    .button:active {
+      transform: scale(0.95);
+    }
+
+    @media (min-width: 769px) {
+      .button {
+        transform: scale(1); /* Убрано уменьшение для десктопа */
+      }
+      .button:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .next-button {
+      background-color: transparent;
+      border: 2px solid #00b398;
+      color: #00b398;
+      font-size: 18px;
+      border-radius: 16px;
+      padding: 16px 24px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 320px;
+      box-sizing: border-box;
+      height: 56px;
+    }
+
+    .next-button:hover {
+      background-color: rgba(0, 179, 152, 0.1);
+    }
+
+    .next-button:active {
+      transform: scale(0.95);
+    }
+
+    .final-button {
+      background-color: #00b398;
+      color: white;
+      border: none;
+      font-size: 18px;
+      border-radius: 16px;
+      padding: 16px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+      width: 100%;
+      max-width: 320px;
+      box-sizing: border-box;
+      height: 56px;
+      text-align: center;
+      position: relative;
+      z-index: 20;
+    }
+
+    .final-button:hover {
+      background-color: #008f79;
+    }
+
+    .final-button:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .pulse {
+      animation: pulse 0.5s ease;
+    }
+
+    /* Конфетти */
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #00b398;
+      opacity: 0.8;
+      animation: confetti-fall 5s linear forwards;
+    }
+
+    .confetti:nth-child(2n) {
+      background-color: #008f79;
+    }
+
+    .confetti:nth-child(3n) {
+      background-color: #0D3A36;
+    }
+
+    .confetti:nth-child(4n) {
+      background-color: #00d9b8;
+    }
+
+    .confetti:nth-child(5n) {
+      background-color: #006d5b;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div id="game-container">
-        <div id="score">Очки: 0</div>
-        <img id="scene-image" src="assets/start.jpg" alt="scene">
-        <div id="question">Привет! Я твой друг. Нет.</div>
-        <div id="answers"></div>
+
+  <div class="header">
+    <img src="Logo.png" alt="Logo">
+  </div>
+
+  <div class="quiz-container">
+    <div class="slide-wrapper" id="slide-wrapper">
+      <img id="slide-image" src="start.png" class="slide-image fade-in" alt="Слайд">
     </div>
+    <div class="buttons" id="buttons-container">
+      <button class="button" onclick="goToSlide(1)">Начать</button>
+    </div>
+  </div>
 
-<script>
-const scenes = {
-    start: {
-        image: "assets/start.jpg",
-        question: "Что включить в кафе?",
-        answers: [
-            { text: "Спеть", next: "empty" },
-            { text: "Включить свой плеер", next: "agent" },
-            { text: "Включить Звук Бизнес", next: "success", score: 1 }
+  <div id="confetti-container" class="confetti-container"></div>
+
+  <script>
+    const slides = [
+      {
+        background: 'Q1.png',
+        options: [
+          { text: "включу радио", image: "Q1-no1.png", points: 0 },
+          { text: "включу свою подборку", image: "Q1-no2.png", points: 0 },
+          { text: "куплю подписку", image: "Q1-yes.png", points: 1 }
         ]
-    },
-    empty: {
-        image: "assets/emptycafe.jpg",
-        question: "Пусто, все ушли...",
-        answers: [{ text: "Дальше", next: "cake" }]
-    },
-    agent: {
-        image: "assets/agent.jpg",
-        question: "Подозрительный агент пришёл.",
-        answers: [{ text: "Продолжить", next: "cake" }]
-    },
-    success: {
-        image: "assets/success.jpg",
-        question: "Все довольны, музыка отличная!",
-        answers: [{ text: "Продолжить", next: "cake" }]
-    },
-    cake: {
-        image: "assets/konditer.jpg",
-        question: "Кондитер оформляет торт. Что выбрать?",
-        answers: [
-            { text: "Нарисовать Лосяша", next: "sud" },
-            { text: "Придумать свою картинку", next: "game", score: 1 }
+      },
+      {
+        background: 'Q2.png',
+        options: [
+          { text: "героя из мультике", image: "Q2-no.png", points: 0 },
+          { text: "нарисую своего", image: "Q2-yes.png", points: 1 }
         ]
-    },
-    sud: {
-        image: "assets/sud.jpg",
-        question: "Пришло уведомление в суд!",
-        answers: [{ text: "Продолжить", next: "game" }]
-    },
-    game: {
-        image: "assets/game3x3.jpg",
-        question: "Найди одинаковые обложки!",
-        isMemoryGame: true
-    },
-    tv: {
-        image: "assets/tv.jpg",
-        question: "Включить любимый сериал?",
-        answers: [
-            { text: "Да, всё нормально", next: "court" },
-            { text: "У меня лицензия", next: "final", score: 1 }
+      },
+      {
+        background: 'Q3.png',
+        options: [
+          { text: "конечно включу", image: "Q3-no.png", points: 0 },
+          { text: "не буду", image: "Q3-yes.png", points: 1 }
         ]
-    },
-    court: {
-        image: "assets/sud.jpg",
-        question: "Уведомление в суд...",
-        answers: [{ text: "Финал", next: "final" }]
-    },
-    final: {
-        image: "assets/final.jpg",
-        question: "Финал зависит от очков.",
-        answers: []
+      }
+    ];
+
+    const finalSlides = {
+      0: "F3.png",
+      1: "F2.png",
+      2: "F2.png",
+      3: "F0.png"
+    };
+
+    let currentSlide = 0;
+    let totalPoints = 0;
+
+    function createConfetti() {
+      const container = document.getElementById('confetti-container');
+      container.innerHTML = '';
+      
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.width = (Math.random() * 8 + 6) + 'px';
+        confetti.style.height = (Math.random() * 8 + 6) + 'px';
+        confetti.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        confetti.style.animationDelay = (Math.random() * 2) + 's';
+        container.appendChild(confetti);
+      }
     }
-};
 
-let score = 0;
-let firstCard = null;
-let lockBoard = false;
-let matches = 0;
+    function goToSlide(index) {
+      currentSlide = index;
+      showSlide(slides[index - 1]);
+    }
 
-function setScene(name) {
-    const scene = scenes[name];
-    document.getElementById("scene-image").src = scene.image;
-    document.getElementById("question").textContent = scene.question;
-    document.getElementById("answers").innerHTML = "";
-
-    if (scene.isMemoryGame) return renderMemoryGame();
-
-    scene.answers.forEach(a => {
-        const btn = document.createElement("button");
-        btn.className = "answer-btn";
-        btn.textContent = a.text;
+    function showSlide(slideData) {
+      updateImage(slideData.background);
+      const buttonsContainer = document.getElementById('buttons-container');
+      buttonsContainer.innerHTML = '';
+      slideData.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'button';
+        btn.textContent = opt.text;
         btn.onclick = () => {
-            if (a.score) score += a.score;
-            document.getElementById("score").textContent = "Очки: " + score;
-            if (a.next) setScene(a.next);
+          btn.classList.add('pulse');
+          setTimeout(() => {
+            showAnswer(opt);
+          }, 500);
         };
-        document.getElementById("answers").appendChild(btn);
-    });
-}
-
-function renderMemoryGame() {
-    const grid = document.createElement("div");
-    grid.id = "memory-grid";
-    const images = ["vinyl1.jpg","vinyl2.jpg","vinyl3.jpg","vinyl4.jpg","vinyl5.jpg","vinyl6.jpg"];
-    const all = [...images.slice(0,4),...images.slice(0,4)].sort(() => 0.5 - Math.random());
-    all.forEach(src => {
-        const card = document.createElement("div");
-        card.className = "memory-card";
-        card.dataset.img = src;
-        card.style.backgroundImage = "url('assets/back.jpg')";
-        card.onclick = () => flipCard(card, src);
-        grid.appendChild(card);
-    });
-    const answers = document.getElementById("answers");
-    answers.innerHTML = "";
-    answers.appendChild(grid);
-}
-
-function flipCard(card, src) {
-    if (lockBoard || card.classList.contains("matched")) return;
-    card.style.backgroundImage = `url('assets/${src}')`;
-    if (!firstCard) {
-        firstCard = card;
-    } else {
-        lockBoard = true;
-        setTimeout(() => {
-            if (firstCard.dataset.img === card.dataset.img && firstCard !== card) {
-                firstCard.classList.add("matched");
-                card.classList.add("matched");
-                matches++;
-                if (matches === 4) setScene("tv");
-            } else {
-                firstCard.style.backgroundImage = "url('assets/back.jpg')";
-                card.style.backgroundImage = "url('assets/back.jpg')";
-            }
-            firstCard = null;
-            lockBoard = false;
-        }, 1000);
+        buttonsContainer.appendChild(btn);
+      });
     }
-}
 
-setScene("start");
-</script>
+    function showAnswer(option) {
+      updateImage(option.image);
+      totalPoints += option.points;
+      const buttonsContainer = document.getElementById('buttons-container');
+      buttonsContainer.innerHTML = '';
+      const next = document.createElement('button');
+      next.className = 'next-button';
+      next.textContent = "Далее";
+      next.onclick = () => {
+        next.classList.add('pulse');
+        setTimeout(() => {
+          if (currentSlide < slides.length) {
+            goToSlide(currentSlide + 1);
+          } else {
+            showFinal();
+          }
+        }, 500);
+      };
+      buttonsContainer.appendChild(next);
+    }
+
+    function showFinal() {
+      const image = finalSlides[totalPoints] || finalSlides[0];
+      updateImage(image);
+      const buttonsContainer = document.getElementById('buttons-container');
+      buttonsContainer.innerHTML = '';
+      const link = document.createElement('a');
+      link.href = 'https://zvuk-b2b.com';
+      link.target = '_blank';
+      link.className = 'final-button';
+      link.textContent = 'Попробовать бесплатно';
+      link.onclick = () => {
+        link.classList.add('pulse');
+      };
+      buttonsContainer.appendChild(link);
+      
+      // Запускаем конфетти
+      createConfetti();
+    }
+
+    function updateImage(src) {
+      const img = document.getElementById('slide-image');
+      img.classList.remove('fade-in');
+      img.classList.add('fade-out');
+      setTimeout(() => {
+        img.src = src;
+        img.classList.remove('fade-out');
+        img.classList.add('fade-in');
+      }, 300);
+    }
+
+    // Свайпы
+    let startX = 0;
+    document.getElementById('slide-wrapper').addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+    });
+
+    document.getElementById('slide-wrapper').addEventListener('touchend', e => {
+      const endX = e.changedTouches[0].clientX;
+      const diff = startX - endX;
+      if (Math.abs(diff) > 50 && currentSlide < slides.length) {
+        if (diff > 0) goToSlide(currentSlide + 1);
+      }
+    });
+  </script>
+
 </body>
 </html>
