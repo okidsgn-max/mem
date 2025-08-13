@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Квиз</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #0D3A36;
+      height: 100%;
+      width: 100%;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .quiz-container {
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 90%;
+      position: relative;
+      padding: 0px;
+      box-sizing: border-box;
+    }
+    .slide-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .slide-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .buttons {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 80%;
+      z-index: 5;
+      gap: 8px;
+    }
+    .button {
+      background-color: #00b398;
+      color: white;
+      border: none;
+      padding: 16px 24px;
+      font-size: 18px;
+      border-radius: 16px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 270px;
+      box-sizing: border-box;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .button:hover {
+      background-color: #008f79;
+    }
+
+    .button:active {
+      transform: scale(0.95);
+    }
+
+    @media (min-width: 769px) {
+      .button:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .next-button {
+      background-color: transparent;
+      border: 2px solid #00b398;
+      color: #00b398;
+      font-size: 18px;
+      border-radius: 16px;
+      padding: 16px 24px;
+      cursor: pointer;
+      width: 100%;
+      max-width: 270px;
+      box-sizing: border-box;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .next-button:hover {
+      background-color: rgba(0, 179, 152, 0.1);
+    }
+
+    .next-button:active {
+      transform: scale(0.95);
+    }
+
+    .final-button {
+      background-color: #00b398;
+      color: white;
+      border: none;
+      font-size: 18px;
+      border-radius: 16px;
+      padding: 16px 24px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      width: 100%;
+      max-width: 270px;
+      box-sizing: border-box;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .final-button:hover {
+      background-color: #008f79;
+    }
+
+    .final-button:active {
+      transform: scale(0.95);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+
+    .pulse {
+      animation: pulse 0.5s ease;
+    }
+
+    .confetti-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+      overflow: hidden;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #00b398;
+      opacity: 0.8;
+      animation: confetti-fall 5s linear forwards;
+    }
+
+    .confetti:nth-child(2n) {
+      background-color: #008f79;
+    }
+
+    .confetti:nth-child(3n) {
+      background-color: #0D3A36;
+    }
+
+    .confetti:nth-child(4n) {
+      background-color: #00d9b8;
+    }
+
+    .confetti:nth-child(5n) {
+      background-color: #006d5b;
+    }
+
+    @keyframes confetti-fall {
+      0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-container">
+    <div class="slide-wrapper" id="slide-wrapper">
+      <img id="slide-image" src="start.webp" class="slide-image" alt="Слайд">
+    </div>
+    <div class="buttons" id="buttons-container">
+      <button class="button" onclick="goToSlide(1)">Начать</button>
+    </div>
+  </div>
+
+  <div id="confetti-container" class="confetti-container"></div>
+
+  <script>
+    // Предзагрузка изображений
+    const preloadImages = () => {
+      const allImages = [
+        'start.webp',
+        'Q1.webp', 'Q1-no1.webp', 'Q1-no2.webp', 'Q1-yes.webp',
+        'Q2.webp', 'Q2-no.webp', 'Q2-yes.webp',
+        'Q3.webp', 'Q3-no.webp', 'Q3-yes.webp',
+        'F0.webp', 'F2.webp', 'F3.webp'
+      ];
+      
+      allImages.forEach(src => {
+        const img = new Image();
+        img.src = src;
+      });
+    };
+    
+    // Запускаем предзагрузку при загрузке страницы
+    window.addEventListener('DOMContentLoaded', preloadImages);
+
+    const slides = [
+      {
+        background: 'Q1.webp',
+        options: [
+          { text: "включу радио", image: "Q1-no1.webp", points: 0 },
+          { text: "включу свою подборку", image: "Q1-no2.webp", points: 0 },
+          { text: "куплю подписку", image: "Q1-yes.webp", points: 1 }
+        ]
+      },
+      {
+        background: 'Q2.webp',
+        options: [
+          { text: "героя из мультике", image: "Q2-no.webp", points: 0 },
+          { text: "нарисую своего", image: "Q2-yes.webp", points: 1 }
+        ]
+      },
+      {
+        background: 'Q3.webp',
+        options: [
+          { text: "конечно включу", image: "Q3-no.webp", points: 0 },
+          { text: "не буду", image: "Q3-yes.webp", points: 1 }
+        ]
+      }
+    ];
+
+    const finalSlides = {
+      0: "F3.webp",
+      1: "F2.webp",
+      2: "F1.webp",
+      3: "F0.webp"
+    };
+
+    let currentSlide = 0;
+    let totalPoints = 0;
+
+    function createConfetti() {
+      const container = document.getElementById('confetti-container');
+      container.innerHTML = '';
+      
+      for (let i = 0; i < 100; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * 100 + 'vw';
+        confetti.style.width = (Math.random() * 8 + 6) + 'px';
+        confetti.style.height = (Math.random() * 8 + 6) + 'px';
+        confetti.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        confetti.style.animationDelay = (Math.random() * 2) + 's';
+        container.appendChild(confetti);
+      }
+    }
+
+    function goToSlide(index) {
+      currentSlide = index;
+      showSlide(slides[index - 1]);
+    }
+
+    function showSlide(slideData) {
+      const img = document.getElementById('slide-image');
+      img.src = slideData.background;
+      
+      const buttonsContainer = document.getElementById('buttons-container');
+      buttonsContainer.innerHTML = '';
+      
+      slideData.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'button';
+        btn.textContent = opt.text;
+        btn.onclick = () => {
+          btn.classList.add('pulse');
+          setTimeout(() => {
+            showAnswer(opt);
+          }, 500);
+        };
+        buttonsContainer.appendChild(btn);
+      });
+    }
+
+    function showAnswer(option) {
+      const img = document.getElementById('slide-image');
+      img.src = option.image;
+      
+      totalPoints += option.points;
+      const buttonsContainer = document.getElementById('buttons-container');
+      buttonsContainer.innerHTML = '';
+      
+      const next = document.createElement('button');
+      next.className = 'next-button';
+      next.textContent = "Далее";
+      next.onclick = () => {
+        next.classList.add('pulse');
+        setTimeout(() => {
+          if (currentSlide < slides.length) {
+            goToSlide(currentSlide + 1);
+          } else {
+            showFinal();
+          }
+        }, 500);
+      };
+      buttonsContainer.appendChild(next);
+    }
+
+    function showFinal() {
+      const image = finalSlides[totalPoints] || finalSlides[0];
+      const img = document.getElementById('slide-image');
+      img.src = image;
+      
+      const buttonsContainer = document.getElementById('buttons-container');
+      buttonsContainer.innerHTML = '';
+      
+      const link = document.createElement('a');
+      link.href = 'https://app.zvuk-b2b.com/register?utm_source=meme-quiz&utm_campaign=after-quiz&utm_content=buttom&promocode=meme-quiz-form';
+      link.target = '_blank';
+      link.className = 'final-button';
+      link.textContent = 'Попробовать бесплатно';
+      link.onclick = () => {
+        link.classList.add('pulse');
+      };
+      buttonsContainer.appendChild(link);
+      
+      createConfetti();
+    }
+
+    // Свайпы
+    let startX = 0;
+    document.getElementById('slide-wrapper').addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+    });
+
+    document.getElementById('slide-wrapper').addEventListener('touchend', e => {
+      const endX = e.changedTouches[0].clientX;
+      const diff = startX - endX;
+      if (Math.abs(diff) > 50 && currentSlide < slides.length) {
+        if (diff > 0) goToSlide(currentSlide + 1);
+      }
+    });
+  </script>
+
+</body>
+</html>
