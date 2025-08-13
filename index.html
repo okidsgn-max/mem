@@ -11,9 +11,13 @@
         m[i].l=1*new Date();
         for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
         k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=103742757', 'ym');
+    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js','ym');
 
-    ym(103742757, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+    ym(103742757,'init',{
+        clickmap:true,
+        trackLinks:true,
+        accurateTrackBounce:true
+    });
   </script>
   <noscript><div><img src="https://mc.yandex.ru/watch/103742757" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
   <!-- /Yandex.Metrika counter -->
@@ -229,7 +233,7 @@
       <img id="slide-image" src="start.webp" class="slide-image" alt="Слайд">
     </div>
     <div class="buttons" id="buttons-container">
-      <button class="button" onclick="goToSlide(1); ym(103742757,'reachGoal','quiz_start');">Начать</button>
+      <button class="button" onclick="goToSlide(1)">Начать</button>
     </div>
   </div>
 
@@ -300,7 +304,7 @@
         
         // Генерируем случайные направления для разлета
         const angle = Math.random() * Math.PI * 2;
-        const distance = 0.5 + Math.random() * 0.7; // 0.5-1.2 от размера экрана
+        const distance = 0.5 + Math.random() * 0.7;
         
         // Устанавливаем CSS переменные для анимации
         confetti.style.setProperty('--random-x', Math.cos(angle) * distance);
@@ -317,11 +321,6 @@
     function goToSlide(index) {
       currentSlide = index;
       showSlide(slides[index - 1]);
-      
-      // Отправляем событие в Яндекс.Метрику при переходе на новый вопрос
-      if (typeof ym !== 'undefined') {
-        ym(103742757,'reachGoal','quiz_question_'+index);
-      }
     }
 
     function showSlide(slideData) {
@@ -382,21 +381,15 @@
       link.target = '_blank';
       link.className = 'final-button';
       link.textContent = 'Попробовать бесплатно';
-      link.onclick = () => {
-        link.classList.add('pulse');
-        // Отправляем событие в Яндекс.Метрику при клике на финальную кнопку
+      link.onclick = function() {
         if (typeof ym !== 'undefined') {
-          ym(103742757,'reachGoal','quiz_final_button');
+          ym(103742757,'reachGoal','final_button_click');
         }
+        link.classList.add('pulse');
       };
       buttonsContainer.appendChild(link);
       
       createConfetti();
-      
-      // Отправляем событие в Яндекс.Метрику о завершении квиза
-      if (typeof ym !== 'undefined') {
-        ym(103742757,'reachGoal','quiz_complete', {score: totalPoints});
-      }
     }
 
     // Свайпы
@@ -413,6 +406,5 @@
       }
     });
   </script>
-
 </body>
 </html>
